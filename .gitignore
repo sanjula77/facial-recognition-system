@@ -1,0 +1,42 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Data
+data/
+processed_data/
+embeddings/
+models/
+!data/.gitkeep
+!processed_data/.gitkeep
+!embeddings/.gitkeep
+!models/.gitkeep
+
+# Notebooks checkpoints
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# Config
+config.yaml
+
+# Python packaging
+*.egg-info/
+dist/
+build/
