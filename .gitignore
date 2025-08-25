@@ -22,7 +22,6 @@ Thumbs.db
 data/
 processed_data/
 embeddings/
-models/
 !data/.gitkeep
 !processed_data/.gitkeep
 !embeddings/.gitkeep
