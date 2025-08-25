@@ -8,6 +8,7 @@ venv/
 env/
 .venv/
 ENV/
+face-recog-venv/
 
 # IDE files
 .vscode/

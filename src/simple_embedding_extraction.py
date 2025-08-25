@@ -1,4 +1,4 @@
-# src/embedding_extraction.py
+# src/simple_embedding_extraction.py
 
 import os
 import numpy as np
@@ -21,10 +21,10 @@ EMBEDDINGS_FILE = os.path.join(EMBEDDINGS_DIR, "embeddings.npy")
 LABELS_FILE = os.path.join(EMBEDDINGS_DIR, "labels.npy")
 
 def initialize_face_analyzer():
-    """Initialize InsightFace analyzer with optimized parameters."""
+    """Initialize InsightFace analyzer for embedding extraction only."""
     try:
         app = FaceAnalysis(name='buffalo_l')
-        # Use detection size that matches the processed images
+        # We only need the recognition model, not detection
         app.prepare(ctx_id=0, det_size=(112, 112))
         logger.info("✅ Face analyzer initialized successfully")
         return app
@@ -57,8 +57,8 @@ def check_processed_data():
     logger.info(f"✅ Found {total_images} processed images across {len(person_dirs)} persons")
     return True
 
-def extract_embeddings(app):
-    """Extract face embeddings from processed images."""
+def extract_embeddings_simple(app):
+    """Extract face embeddings from processed images without face detection."""
     embeddings = []
     labels = []
     
@@ -84,29 +84,25 @@ def extract_embeddings(app):
                     logger.warning(f"⚠️ Skipping {img_name}: unexpected shape {img.shape}")
                     continue
                 
-                # Detect and extract face embeddings
-                faces = app.get(img)
-                
-                if len(faces) == 0:
-                    logger.warning(f"⚠️ No face detected in {img_name}")
-                    continue
-                
-                # Use first detected face
+                # Since these are already cropped faces, we can try to extract embeddings directly
+                # We'll use the recognition model without detection
                 try:
-                    face_embedding = faces[0].embedding
+                    # Create a fake face object with the image data
+                    # This is a workaround since we already have cropped faces
+                    face_embedding = app.models['recognition'].get_feat(img)
                     
-                    if face_embedding.shape != (512,):
-                        logger.warning(f"⚠️ Skipping {img_name}: embedding shape mismatch {face_embedding.shape}")
-                        continue
-                    
-                    # Normalize embedding
-                    face_embedding = face_embedding / np.linalg.norm(face_embedding)
-                    
-                    embeddings.append(face_embedding)
-                    labels.append(person)
-                    
+                    if face_embedding is not None and face_embedding.shape == (512,):
+                        # Normalize embedding
+                        face_embedding = face_embedding / np.linalg.norm(face_embedding)
+                        
+                        embeddings.append(face_embedding)
+                        labels.append(person)
+                        logger.info(f"✅ Extracted embedding from {img_name}")
+                    else:
+                        logger.warning(f"⚠️ Skipping {img_name}: invalid embedding shape")
+                        
                 except Exception as e:
-                    logger.error(f"🔥 Error extracting embedding from {img_name}: {e}")
+                    logger.warning(f"⚠️ Could not extract embedding from {img_name}: {e}")
                     continue
                     
             except Exception as e:
@@ -137,8 +133,8 @@ def save_embeddings(embeddings, labels):
         return False
 
 def main():
-    """Main function to run the embedding extraction pipeline."""
-    logger.info("🚀 Starting face embedding extraction pipeline...")
+    """Main function to run the simple embedding extraction pipeline."""
+    logger.info("🚀 Starting simple face embedding extraction pipeline...")
     
     # Check if processed data exists
     if not check_processed_data():
@@ -153,7 +149,7 @@ def main():
     
     # Extract embeddings
     logger.info("🔍 Extracting face embeddings...")
-    embeddings, labels = extract_embeddings(app)
+    embeddings, labels = extract_embeddings_simple(app)
     
     if not embeddings:
         logger.error("❌ No embeddings were extracted successfully")
